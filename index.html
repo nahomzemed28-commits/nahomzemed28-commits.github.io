@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #2d0a0f;
+      --fg:     #f0ede8;
+      --accent: #b05c6e;
+      --muted:  #9a7a80;
+      --mono:   'Space Mono', monospace;
+      --display:'Syne', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--display);
+      cursor: none;
+      overflow-x: hidden;
+    }
+
+    /* ── CUSTOM CURSOR ── */
+    #cursor-blob {
+      position: fixed;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(176,92,110,0.10) 0%, transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: transform 0.12s ease-out;
+      z-index: 9999;
+      mix-blend-mode: screen;
+    }
+
+    #cursor-dot {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 10000;
+      transition: transform 0.06s ease-out, width 0.2s, height 0.2s;
+    }
+
+    body:has(a:hover) #cursor-dot,
+    body:has(button:hover) #cursor-dot {
+      width: 40px;
+      height: 40px;
+      background: rgba(176,92,110,0.2);
+      border: 1px solid var(--accent);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 2rem;
+      right: 2.5rem;
+      z-index: 100;
+      display: flex;
+      gap: 2rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    nav a {
+      color: var(--fg);
+      text-decoration: none;
+      opacity: 0.45;
+      transition: opacity 0.2s;
+      position: relative;
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--accent);
+      transition: width 0.25s;
+    }
+
+    nav a:hover { opacity: 1; }
+    nav a:hover::after { width: 100%; }
+
+    /* ── FLOATING LINES BACKGROUND ── */
+    #floating-lines-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      width: 100% !important;
+      height: 100% !important;
+      mix-blend-mode: screen;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 6vw 8vh;
+      overflow: hidden;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.3s forwards;
+    }
+
+    .hero-name {
+      font-size: clamp(5rem, 14vw, 13rem);
+      font-weight: 300;
+      font-family: 'Georgia', serif;
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+      margin-left: -0.04em;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.5s forwards;
+    }
+
+    .hero-name span {
+      display: block;
+      position: relative;
+      width: fit-content;
+    }
+
+    .hero-name .outline {
+      -webkit-text-stroke: 1px rgba(240,237,232,0.25);
+      color: transparent;
+      padding-left: 3vw;
+    }
+
+    .hero-name:hover .solid { animation: glitch 0.35s steps(1) 1; }
+
+    @keyframes glitch {
+      0%   { clip-path: inset(0 0 85% 0); transform: translateX(-6px); }
+      20%  { clip-path: inset(40% 0 40% 0); transform: translateX(6px); }
+      40%  { clip-path: inset(80% 0 5% 0); transform: translateX(-4px); color: #7b2d42; }
+      60%  { clip-path: inset(20% 0 60% 0); transform: translateX(3px); color: var(--accent); }
+      80%  { clip-path: inset(60% 0 20% 0); transform: translateX(-2px); }
+      100% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+    }
+
+    .hero-tagline {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.8s forwards;
+    }
+
+    .hero-tagline p {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--fg);
+      max-width: 360px;
+      line-height: 1.7;
+    }
+
+    .hero-tagline-line {
+      width: 60px;
+      height: 1px;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 3rem;
+      right: 6vw;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fg);
+      writing-mode: vertical-rl;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      opacity: 0;
+      animation: fadeUp 1s 1.2s forwards;
+    }
+
+    .scroll-hint::after {
+      content: '';
+      width: 1px;
+      height: 50px;
+      background: linear-gradient(to bottom, var(--muted), transparent);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MARQUEE ── */
+    .marquee-wrap {
+      border-top: 1px solid var(--muted);
+      border-bottom: 1px solid var(--muted);
+      padding: 1rem 0;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 3rem;
+      white-space: nowrap;
+      animation: marquee 20s linear infinite;
+    }
+
+    .marquee-track span {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fg);
+      flex-shrink: 0;
+    }
+
+    .marquee-track span.accent { color: var(--accent); }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── ABOUT ── */
+    #about {
+      padding: 14vh 6vw;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding-top: 0.5rem;
+    }
+
+    .about-portrait {
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      object-fit: cover;
+      opacity: 0.7;
+      margin: 1.5rem auto 0;
+      display: block;
+    }
+
+    .about-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .about-body {
+      padding-left: 8vw;
+    }
+
+    .about-body h2 {
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      margin-bottom: 2rem;
+    }
+
+    .about-body h2 em {
+      font-style: normal;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(240,237,232,0.3);
+    }
+
+    .about-body p {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.9;
+      color: var(--fg);
+      max-width: 520px;
+    }
+
+    .about-body p + p { margin-top: 1.5rem; }
+
+    .stat-row {
+      display: flex;
+      gap: 3rem;
+      margin-top: 3rem;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .stat-num {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+
+    /* ── WORK ── */
+    #work {
+      padding: 10vh 6vw;
+    }
+
+    .work-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 5rem;
+    }
+
+    .work-header h2 {
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 800;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+    }
+
+    .work-header a {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fg);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .work-header a:hover { color: var(--accent); }
+
+    .projects-grid {
+      display: grid;
+      gap: 1px;
+      background: var(--muted);
+    }
+
+    .project-card {
+      background: var(--bg);
+      padding: 3rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 2rem;
+      align-items: center;
+      transition: background 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
+      z-index: 0;
+    }
+
+    .project-card:hover::before { transform: scaleX(1); }
+
+    .project-card:hover { color: var(--bg); }
+
+    .project-card > * { position: relative; z-index: 1; }
+
+    .project-num {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--fg);
+      transition: color 0.3s;
+      width: 3rem;
+    }
+
+    .project-card:hover .project-num { color: rgba(8,8,8,0.5); }
+
+    .project-info h3 {
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      transition: color 0.3s;
+    }
+
+    .project-tags {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--fg);
+      border: 1px solid var(--muted);
+      padding: 0.2rem 0.6rem;
+      transition: color 0.3s, border-color 0.3s;
+    }
+
+    .project-card:hover .tag {
+      color: rgba(8,8,8,0.6);
+      border-color: rgba(8,8,8,0.3);
+    }
+
+    .project-arrow {
+      font-size: 1.5rem;
+      transform: rotate(-45deg);
+      transition: transform 0.3s, color 0.3s;
+    }
+
+    .project-card:hover .project-arrow {
+      transform: rotate(0deg);
+      color: var(--bg);
+    }
+
+    /* ── SKILLS ── */
+    #skills {
+      padding: 12vh 6vw;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    #skills h2 {
+      font-size: clamp(3rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+      grid-column: 1 / -1;
+    }
+
+    .skill-col { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .skill-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid var(--muted);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .skill-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 1px;
+      width: var(--level, 0%);
+      background: var(--accent);
+      transition: width 1.2s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+
+    .skill-item.visible::after { width: var(--level); }
+
+    .skill-pct {
+      color: var(--fg);
+      font-size: 0.7rem;
+    }
+
+    /* ── CONTACT ── */
+    #contact {
+      padding: 16vh 6vw;
+      border-top: 1px solid var(--muted);
+    }
+
+    .contact-big {
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 800;
+      line-height: 0.88;
+      letter-spacing: -0.03em;
+    }
+
+    .contact-big em {
+      font-style: normal;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(240,237,232,0.25);
+    }
+
+    .contact-right {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .contact-right p {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      line-height: 1.8;
+      color: var(--fg);
+      max-width: 360px;
+    }
+
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      color: var(--fg);
+      text-decoration: none;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--muted);
+      transition: color 0.2s, padding-left 0.2s;
+    }
+
+    .contact-link:hover {
+      color: var(--accent);
+      padding-left: 0.5rem;
+    }
+
+    .contact-link span {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fg);
+      min-width: 5rem;
+      transition: color 0.2s;
+    }
+
+    .contact-link:hover span { color: var(--accent); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 2rem 6vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--muted);
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+
+    /* ── REVEAL ANIMATION ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      #about { grid-template-columns: 1fr; gap: 1.5rem; }
+      .about-body { padding-left: 0; }
+      #skills { grid-template-columns: 1fr; gap: 2rem; }
+      #contact { grid-template-columns: 1fr; gap: 3rem; }
+      .work-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .project-card { grid-template-columns: auto 1fr; }
+      .project-arrow { display: none; }
+      nav { gap: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CURSOR -->
+  <div id="cursor-blob"></div>
+  <div id="cursor-dot"></div>
+
+  <!-- FLOATING LINES BACKGROUND -->
+  <canvas id="floating-lines-canvas"></canvas>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#about">About</a>
+    <a href="#work">Work</a>
+    <a href="#skills">Skills</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <p class="hero-eyebrow">Available for work &nbsp;/&nbsp; 2025</p>
+
+    <h1 class="hero-name">
+      <span class="solid">Nahom</span>
+      <span class="outline">Zemed</span>
+    </h1>
+
+    <div class="hero-tagline">
+      <div class="hero-tagline-line"></div>
+      <p>Neuroscientist &amp; tech enthusiast</p>
+    </div>
+
+    <div class="scroll-hint">Scroll</div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span>Data</span><span class="accent">✦</span>
+      <span>Neuroengineering</span><span class="accent">✦</span>
+      <span>Large Language Models</span><span class="accent">✦</span>
+      <span>Artifical Intelligence</span><span class="accent">✦</span>
+      <!-- duplicate for seamless loop -->
+      <span>Business Applications</span><span class="accent">✦</span>
+      <span>Consulting</span><span class="accent">✦</span>
+      <span>Research</span><span class="accent">✦</span>
+      <span>Brain-Computer Interface</span><span class="accent">✦</span>
+      
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="about-left reveal">
+      <p class="section-label">About</p>
+      <img src="Gemini_Generated_Image_nr5yz8nr5yz8nr5y.png" class="about-portrait" alt="Portrait" />
+    </div>
+    <div class="about-body reveal">
+      <h2>Builder.<br/><em>Thinker.</em><br/>Creator.</h2>
+      <p>
+        A computational neuroscience major at UT Austin. Focused on the intersection of neuroscience, tech, and data visualization. 
+      </p>
+      <p>
+        Focused on levying neuroscience and data science to solve real-world problems. Open to opportunities in research, industry, and quantitative consulting roles.
+      </p>
+      <div class="stat-row">
+        <div class="stat">
+          <span class="stat-num">3+</span>
+          <span class="stat-label">Projects</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">2+</span>
+          <span class="stat-label">Years Exp.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section id="work">
+    <div class="work-header reveal">
+      <h2>Selected<br/>Work</h2>
+      <a href="#">View all →</a>
+    </div>
+
+    <div class="projects-grid">
+      <div class="project-card reveal">
+        <span class="project-num">01</span>
+        <div class="project-info">
+          <h3>EMG Operated Prosthetics</h3>
+          <div class="project-tags">
+            <span class="tag">R&D</span>
+            <span class="tag">Development</span>
+            <span class="tag">Data Visualization</span>
+            <span class="tag">Arduinos</span>
+            <span class="tag">NumPy</span>
+          </div>
+        </div>
+        <span class="project-arrow">↗</span>
+      </div>
+
+      <div class="project-card reveal">
+        <span class="project-num">02</span>
+        <div class="project-info">
+          <h3>Personal Health Research</h3>
+          <div class="project-tags">
+            <span class="tag">Data Analysis</span>
+            <span class="tag">Qualtrics</span>
+            <span class="tag">Survey</span>
+            <span class="tag">Presentation</span>
+          </div>
+        </div>
+        <span class="project-arrow">↗</span>
+      </div>
+
+
+      <div class="project-card reveal">
+        <span class="project-num">03</span>
+        <div class="project-info">
+          <h3>Resumaxx</h3>
+          <div class="project-tags">
+            <span class="tag">UI/UX</span>
+            <span class="tag">Full-Stack</span>
+            <span class="tag">Claude API</span>
+            <span class="tag">Node.js</span>
+          </div>
+        </div>
+        <span class="project-arrow">↗</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <h2 class="reveal">Skills<br/></h2>
+
+    <div class="skill-col reveal">
+      <div class="skill-item" style="--level: 100%">
+        <span>Artificial Intelligence Prompt Engineering</span><span class="skill-pct">100%</span>
+      </div>
+      <div class="skill-item" style="--level: 80%">
+        <span>Skill Two</span><span class="skill-pct">80%</span>
+      </div>
+      <div class="skill-item" style="--level: 75%">
+        <span>Skill Three</span><span class="skill-pct">75%</span>
+      </div>
+      <div class="skill-item" style="--level: 85%">
+        <span>Skill Four</span><span class="skill-pct">85%</span>
+      </div>
+    </div>
+
+    <div class="skill-col reveal">
+      <div class="skill-item" style="--level: 70%">
+        <span>Skill Five</span><span class="skill-pct">70%</span>
+      </div>
+      <div class="skill-item" style="--level: 95%">
+        <span>Skill Six</span><span class="skill-pct">95%</span>
+      </div>
+      <div class="skill-item" style="--level: 65%">
+        <span>Skill Seven</span><span class="skill-pct">65%</span>
+      </div>
+      <div class="skill-item" style="--level: 80%">
+        <span>Skill Eight</span><span class="skill-pct">80%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="contact-right reveal">
+      <p>
+        Open to research, industry, and consulting roles.
+        If it's interesting, let's talk.
+      </p>
+      <div class="contact-links">
+        <a class="contact-link" href="mailto:nahomzemed28@email.com" target="_blank">
+          <span>Email</span>
+          nahomzemed28@email.com
+        </a>
+        <a class="contact-link" href="https://www.linkedin.com/in/nahomzemed/" target="_blank">
+          <span>LinkedIn</span>
+          /in/nahomzemed
+        </a>
+        <a class="contact-link" href="https://github.com/nahomzemed28-commits" target="_blank">
+          <span>GitHub</span>
+          /nahomzemed28-commits
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2025 Nahom Zemed</p>
+    <p>Designed &amp; Built by You</p>
+  </footer>
+
+  <script>
+    // ── FLOATING LINES (exact reactbits shader) ──
+    (function () {
+      const canvas = document.getElementById('floating-lines-canvas');
+      canvas.style.mixBlendMode = 'screen';
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      const scene  = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      camera.position.z = 1;
+
+      // ── exact vertex shader from reactbits ──
+      const vertexShader = `
+precision highp float;
+void main() {
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+
+      // ── exact fragment shader from reactbits ──
+      const fragmentShader = `
+precision highp float;
+
+uniform float iTime;
+uniform vec3  iResolution;
+uniform float animationSpeed;
+
+uniform bool enableTop;
+uniform bool enableMiddle;
+uniform bool enableBottom;
+
+uniform int topLineCount;
+uniform int middleLineCount;
+uniform int bottomLineCount;
+
+uniform float topLineDistance;
+uniform float middleLineDistance;
+uniform float bottomLineDistance;
+
+uniform vec3 topWavePosition;
+uniform vec3 middleWavePosition;
+uniform vec3 bottomWavePosition;
+
+uniform vec2  iMouse;
+uniform bool  interactive;
+uniform float bendRadius;
+uniform float bendStrength;
+uniform float bendInfluence;
+
+uniform bool  parallax;
+uniform float parallaxStrength;
+uniform vec2  parallaxOffset;
+
+uniform vec3 lineGradient[8];
+uniform int  lineGradientCount;
+
+const vec3 BLACK = vec3(0.0);
+const vec3 PINK  = vec3(233.0, 71.0, 245.0) / 255.0;
+const vec3 BLUE  = vec3(47.0,  75.0, 162.0) / 255.0;
+
+mat2 rotate(float r) {
+  return mat2(cos(r), sin(r), -sin(r), cos(r));
+}
+
+vec3 background_color(vec2 uv) {
+  vec3 col = vec3(0.0);
+  float y = sin(uv.x - 0.2) * 0.3 - 0.1;
+  float m = uv.y - y;
+  col += mix(BLUE, BLACK, smoothstep(0.0, 1.0, abs(m)));
+  col += mix(PINK, BLACK, smoothstep(0.0, 1.0, abs(m - 0.8)));
+  return col * 0.5;
+}
+
+vec3 getLineColor(float t, vec3 baseColor) {
+  if (lineGradientCount <= 0) return baseColor;
+  if (lineGradientCount == 1) return lineGradient[0];
+
+  float clampedT = clamp(t, 0.0, 0.9999);
+  float scaled   = clampedT * float(lineGradientCount - 1);
+  int   idx      = int(floor(scaled));
+  float f        = fract(scaled);
+  int   idx2     = idx + 1;
+  if (idx2 >= lineGradientCount) idx2 = lineGradientCount - 1;
+
+  vec3 c1 = lineGradient[idx];
+  vec3 c2 = lineGradient[idx2];
+  return mix(c1, c2, f) * 0.5;
+}
+
+float wave(vec2 uv, float offset, vec2 screenUv, vec2 mouseUv, bool shouldBend) {
+  float time       = iTime * animationSpeed;
+  float x_offset   = offset;
+  float x_movement = time * 0.1;
+  float amp        = sin(offset + time * 0.2) * 0.3;
+  float y          = sin(uv.x + x_offset + x_movement) * amp;
+
+  if (shouldBend) {
+    vec2  d          = screenUv - mouseUv;
+    float influence  = exp(-dot(d, d) * bendRadius);
+    float bendOffset = (mouseUv.y - screenUv.y) * influence * bendStrength * bendInfluence;
+    y += bendOffset;
+  }
+
+  float m = uv.y - y;
+  return 0.0175 / max(abs(m) + 0.01, 1e-3) + 0.01;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+  vec2 baseUv = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+  baseUv.y *= -1.0;
+
+  if (parallax) baseUv += parallaxOffset;
+
+  vec3 col = vec3(0.0);
+  vec3 b   = lineGradientCount > 0 ? vec3(0.0) : background_color(baseUv);
+
+  vec2 mouseUv = vec2(0.0);
+  if (interactive) {
+    mouseUv   = (2.0 * iMouse - iResolution.xy) / iResolution.y;
+    mouseUv.y *= -1.0;
+  }
+
+  // bottom layer
+  if (enableBottom) {
+    for (int i = 0; i < 20; i++) {
+      if (i >= bottomLineCount) break;
+      float fi     = float(i);
+      float t      = fi / max(float(bottomLineCount - 1), 1.0);
+      vec3  lineCol = getLineColor(t, b);
+      float angle  = bottomWavePosition.z * log(length(baseUv) + 1.0);
+      vec2  ruv    = baseUv * rotate(angle);
+      col += lineCol * wave(
+        ruv + vec2(bottomLineDistance * fi + bottomWavePosition.x, bottomWavePosition.y),
+        1.5 + 0.2 * fi, baseUv, mouseUv, interactive
+      ) * 0.2;
+    }
+  }
+
+  // middle layer
+  if (enableMiddle) {
+    for (int i = 0; i < 20; i++) {
+      if (i >= middleLineCount) break;
+      float fi     = float(i);
+      float t      = fi / max(float(middleLineCount - 1), 1.0);
+      vec3  lineCol = getLineColor(t, b);
+      float angle  = middleWavePosition.z * log(length(baseUv) + 1.0);
+      vec2  ruv    = baseUv * rotate(angle);
+      col += lineCol * wave(
+        ruv + vec2(middleLineDistance * fi + middleWavePosition.x, middleWavePosition.y),
+        2.0 + 0.15 * fi, baseUv, mouseUv, interactive
+      );
+    }
+  }
+
+  // top layer
+  if (enableTop) {
+    for (int i = 0; i < 20; i++) {
+      if (i >= topLineCount) break;
+      float fi     = float(i);
+      float t      = fi / max(float(topLineCount - 1), 1.0);
+      vec3  lineCol = getLineColor(t, b);
+      float angle  = topWavePosition.z * log(length(baseUv) + 1.0);
+      vec2  ruv    = baseUv * rotate(angle);
+      ruv.x       *= -1.0;
+      col += lineCol * wave(
+        ruv + vec2(topLineDistance * fi + topWavePosition.x, topWavePosition.y),
+        1.0 + 0.2 * fi, baseUv, mouseUv, interactive
+      ) * 0.1;
+    }
+  }
+
+  fragColor = vec4(col, 1.0);
+}
+
+void main() {
+  vec4 color = vec4(0.0);
+  mainImage(color, gl_FragCoord.xy);
+  gl_FragColor = color;
+}`;
+
+      // ── props from Background file ──
+      const GRADIENT  = ['#E945F5', '#2F4BC0', '#E945F5'];
+      const MAX_STOPS = 8;
+
+      function hexToVec3(hex) {
+        const v = hex.replace('#','');
+        return new THREE.Vector3(
+          parseInt(v.slice(0,2),16)/255,
+          parseInt(v.slice(2,4),16)/255,
+          parseInt(v.slice(4,6),16)/255
+        );
+      }
+
+      const gradientArr = Array.from({length: MAX_STOPS}, () => new THREE.Vector3(1,1,1));
+      GRADIENT.forEach((h,i) => { const c = hexToVec3(h); gradientArr[i].set(c.x,c.y,c.z); });
+
+      const uniforms = {
+        iTime:            { value: 0 },
+        iResolution:      { value: new THREE.Vector3(1,1,1) },
+        animationSpeed:   { value: 2.4 },
+
+        enableTop:        { value: true },
+        enableMiddle:     { value: true },
+        enableBottom:     { value: true },
+
+        topLineCount:     { value: 6 },
+        middleLineCount:  { value: 6 },
+        bottomLineCount:  { value: 6 },
+
+        topLineDistance:    { value: 5 * 0.01 },
+        middleLineDistance: { value: 5 * 0.01 },
+        bottomLineDistance: { value: 5 * 0.01 },
+
+        topWavePosition:    { value: new THREE.Vector3(10.0,  0.5, -0.4) },
+        middleWavePosition: { value: new THREE.Vector3( 5.0,  0.0,  0.2) },
+        bottomWavePosition: { value: new THREE.Vector3( 2.0, -0.7, -1.0) },
+
+        iMouse:           { value: new THREE.Vector2(-1000,-1000) },
+        interactive:      { value: true },
+        bendRadius:       { value: 10.5 },
+        bendStrength:     { value: -0.5 },
+        bendInfluence:    { value: 0.0 },
+
+        parallax:         { value: true },
+        parallaxStrength: { value: 0.5 },
+        parallaxOffset:   { value: new THREE.Vector2(0,0) },
+
+        lineGradient:     { value: gradientArr },
+        lineGradientCount:{ value: GRADIENT.length },
+      };
+
+      const mat  = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), mat);
+      scene.add(mesh);
+
+      function resize() {
+        const w = canvas.clientWidth  || window.innerWidth;
+        const h = canvas.clientHeight || window.innerHeight;
+        renderer.setSize(w, h, false);
+        const dpr = renderer.getPixelRatio();
+        uniforms.iResolution.value.set(
+          renderer.domElement.width,
+          renderer.domElement.height,
+          1
+        );
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // mouse damping (mouseDamping = 0.11)
+      const DAMP = 0.11;
+      const targetMouse    = new THREE.Vector2(-1000,-1000);
+      const currentMouse   = new THREE.Vector2(-1000,-1000);
+      const targetParallax = new THREE.Vector2(0,0);
+      const currentParallax= new THREE.Vector2(0,0);
+      let   targetInfl = 0, currentInfl = 0;
+
+      document.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        const dpr  = renderer.getPixelRatio();
+        const x    = e.clientX - rect.left;
+        const y    = e.clientY - rect.top;
+        targetMouse.set(x * dpr, (rect.height - y) * dpr);
+        targetInfl = 1.0;
+
+        const cx = rect.width  / 2;
+        const cy = rect.height / 2;
+        targetParallax.set(
+           ((e.clientX - rect.left  - cx) / rect.width)  * 0.5,
+          -((e.clientY - rect.top   - cy) / rect.height) * 0.5
+        );
+      });
+
+      document.addEventListener('mouseleave', () => { targetInfl = 0.0; });
+
+      const clock = new THREE.Clock();
+
+      (function render() {
+        requestAnimationFrame(render);
+        uniforms.iTime.value = clock.getElapsedTime();
+
+        currentMouse.lerp(targetMouse, DAMP);
+        uniforms.iMouse.value.copy(currentMouse);
+
+        currentInfl += (targetInfl - currentInfl) * DAMP;
+        uniforms.bendInfluence.value = currentInfl;
+
+        currentParallax.lerp(targetParallax, DAMP);
+        uniforms.parallaxOffset.value.copy(currentParallax);
+
+        renderer.render(scene, camera);
+      })();
+    })();
+
+    // ── CURSOR ──
+    const blob = document.getElementById('cursor-blob');
+    const dot  = document.getElementById('cursor-dot');
+
+    let mx = 0, my = 0;
+    let bx = 0, by = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX;
+      my = e.clientY;
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
+    });
+
+    (function animateBlob() {
+      bx += (mx - bx) * 0.07;
+      by += (my - by) * 0.07;
+      blob.style.left = bx + 'px';
+      blob.style.top  = by + 'px';
+      requestAnimationFrame(animateBlob);
+    })();
+
+    // ── GRADUAL BLUR ──
+    function createGradualBlur(container, {
+      position    = 'bottom',
+      height      = '7rem',
+      strength    = 2,
+      divCount    = 5,
+      curve       = 'bezier',
+      exponential = true,
+      opacity     = 1,
+    } = {}) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: absolute;
+        left: 0; right: 0; ${position}: 0;
+        height: ${height};
+        pointer-events: none;
+        z-index: 10;
+        opacity: ${opacity};
+      `;
+
+      // direction: blur is strongest at the edge, fades toward content
+      const maskDir = position === 'bottom' ? 'to top' : 'to bottom';
+
+      for (let i = 0; i < divCount; i++) {
+        let progress = i / divCount;
+
+        // curve functions (exact from source)
+        if (curve === 'bezier') {
+          progress = progress * progress * (3 - 2 * progress);
+        } else if (curve === 'ease-in') {
+          progress = progress * progress;
+        } else if (curve === 'ease-out') {
+          progress = 1 - (1 - progress) * (1 - progress);
+        } else if (curve === 'ease-in-out') {
+          progress = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        }
+
+        // blur value (exact from source)
+        const blurVal = exponential
+          ? Math.pow(2, progress * 4) * 0.0625 * strength
+          : 0.0625 * (progress * divCount + 1) * strength;
+
+        // each div fades out further up the overlay
+        const fadeStop = ((i + 1) / divCount) * 100;
+
+        const div = document.createElement('div');
+        div.style.cssText = `
+          position: absolute;
+          inset: 0;
+          backdrop-filter: blur(${blurVal}rem);
+          -webkit-backdrop-filter: blur(${blurVal}rem);
+          mask-image: linear-gradient(${maskDir}, black 0%, transparent ${fadeStop}%);
+          -webkit-mask-image: linear-gradient(${maskDir}, black 0%, transparent ${fadeStop}%);
+        `;
+        overlay.appendChild(div);
+      }
+
+      if (getComputedStyle(container).position === 'static') {
+        container.style.position = 'relative';
+      }
+      container.appendChild(overlay);
+      return overlay;
+    }
+
+    // Apply to hero (fades bottom edge into the marquee)
+    createGradualBlur(document.getElementById('hero'), {
+      position: 'bottom', height: '7rem', strength: 2,
+      divCount: 5, curve: 'bezier', exponential: true, opacity: 1,
+    });
+
+    // Apply to each section bottom for a continuous fade between sections
+    ['about', 'work', 'skills'].forEach(id => {
+      createGradualBlur(document.getElementById(id), {
+        position: 'bottom', height: '5rem', strength: 1.5,
+        divCount: 5, curve: 'bezier', exponential: true, opacity: 1,
+      });
+    });
+
+    // ── SCROLL REVEAL ──
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          // trigger skill bar animation
+          e.target.querySelectorAll('.skill-item').forEach(s => s.classList.add('visible'));
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // skill items revealed by parent reveal
+    document.querySelectorAll('.skill-col').forEach(col => {
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.querySelectorAll('.skill-item').forEach((s, i) => {
+              setTimeout(() => s.classList.add('visible'), i * 100);
+            });
+          }
+        });
+      }, { threshold: 0.2 });
+      io.observe(col);
+    });
+
+    // ── HERO GLITCH on name hover ──
+    const nameEl = document.querySelector('.hero-name .solid');
+    nameEl?.addEventListener('mouseenter', () => {
+      nameEl.style.animation = 'none';
+      requestAnimationFrame(() => {
+        nameEl.style.animation = 'glitch 0.35s steps(1) 1';
+      });
+    });
+  </script>
+</body>
+</html>

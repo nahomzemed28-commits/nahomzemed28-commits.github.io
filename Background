@@ -1,0 +1,14 @@
+pnpm dlx shadcn@latest add @react-bits/FloatingLines-JS-CSS
+
+<div style={{ width: '1080px', height: '1080px', position: 'relative' }}>
+  <FloatingLines
+    linesGradient={["#E945F5","#2F4BC0","#E945F5"]}
+    animationSpeed={2.4}
+    interactive
+    bendRadius={10.5}
+    bendStrength={-0.5}
+    mouseDamping={0.11}
+    parallax
+    parallaxStrength={0.5}
+  />
+</div>
